@@ -1,23 +1,288 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stopwatch App</title>
+  <meta name="description" content="Professional, high-precision stopwatch with millisecond accuracy, lap splits, analytics, audio feedback, and keyboard shortcuts.">
+  <title>Stopwatch Pro | High-Precision Chronometer</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+  
+  <!-- Google Fonts: Inter for UI and JetBrains Mono for tabular numbers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Stopwatch</h1>
-    <div id="display">00:00:00</div>
-    <div class="buttons">
-      <button id="start">Start</button>
-      <button id="pause">Pause</button>
-      <button id="reset">Reset</button>
-      <button id="lap">Lap</button>
-    </div>
-    <ul id="laps"></ul>
+  <div class="app-wrapper">
+    <!-- Top Bar Navigation & Controls -->
+    <header class="app-header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="8"></circle>
+          <path d="M12 9v4l2.5 2.5"></path>
+          <path d="M5 3 2 6"></path>
+          <path d="m22 6-3-3"></path>
+          <path d="M12 2v3"></path>
+        </svg>
+        <div class="brand-text">
+          <h1>Stopwatch<span class="accent-badge">PRO</span></h1>
+          <p class="subtitle">High-Precision Sports Chronometer</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Sound Toggle -->
+        <button id="soundToggleBtn" class="icon-btn" title="Toggle Sound Feedback (M)" aria-label="Toggle Sound Feedback">
+          <svg class="sound-on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <svg class="sound-off-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <!-- Shortcuts Help Modal Toggle -->
+        <button id="shortcutsBtn" class="icon-btn" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+            <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"></path>
+          </svg>
+        </button>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button id="themeToggleBtn" class="icon-btn" title="Toggle Dark/Light Mode (T)" aria-label="Toggle Theme">
+          <svg class="theme-sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-moon-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Chronometer Card -->
+    <main class="chronometer-card">
+      <div class="dial-container">
+        <!-- SVG Circular Progress Dial Indicator -->
+        <svg class="progress-ring" viewBox="0 0 320 320">
+          <circle class="progress-ring-track" cx="160" cy="160" r="142" />
+          <circle class="progress-ring-bar" id="progressRing" cx="160" cy="160" r="142" />
+        </svg>
+
+        <div class="dial-inner">
+          <div class="status-indicator" id="statusIndicator">
+            <span class="status-dot"></span>
+            <span class="status-label" id="statusLabel">READY</span>
+          </div>
+
+          <!-- Main Time Display with tabular digits -->
+          <div class="display-container" id="display">
+            <span class="time-main" id="timeMain">00:00:00</span>
+            <span class="time-fraction" id="timeFraction">.00</span>
+          </div>
+
+          <!-- Split / Current Lap Real-Time Counter -->
+          <div class="split-display" id="currentLapDisplay">
+            <span class="split-tag">CURRENT LAP</span>
+            <span class="split-value" id="currentLapTime">00:00.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Action Buttons -->
+      <div class="controls-container">
+        <!-- Lap Button (Left) -->
+        <button id="lapBtn" class="control-btn btn-secondary" disabled title="Record Lap (L)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+            <line x1="4" y1="22" x2="4" y2="15"></line>
+          </svg>
+          <span>Lap</span>
+          <span class="shortcut-tag">L</span>
+        </button>
+
+        <!-- Start / Pause Main Action Button (Center) -->
+        <button id="startBtn" class="control-btn btn-primary" title="Start / Pause (Space)">
+          <div class="btn-icon-wrapper">
+            <!-- Play Icon -->
+            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <!-- Pause Icon -->
+            <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" class="btn-icon hidden">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+          </div>
+          <span id="startBtnText">Start</span>
+          <span class="shortcut-tag">Space</span>
+        </button>
+
+        <!-- Reset Button (Right) -->
+        <button id="resetBtn" class="control-btn btn-secondary" disabled title="Reset (R)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>Reset</span>
+          <span class="shortcut-tag">R</span>
+        </button>
+      </div>
+
+      <!-- Quick Statistics Summary Bar (Shows when 2+ laps) -->
+      <section class="stats-bar hidden" id="statsBar">
+        <div class="stat-card stat-best">
+          <div class="stat-header">
+            <span class="stat-badge best-badge">FASTEST</span>
+            <span class="stat-lap" id="fastestLapNum">#0</span>
+          </div>
+          <div class="stat-value" id="fastestLapTime">--:--.--</div>
+        </div>
+
+        <div class="stat-card stat-avg">
+          <div class="stat-header">
+            <span class="stat-badge avg-badge">AVERAGE</span>
+            <span class="stat-lap">All Laps</span>
+          </div>
+          <div class="stat-value" id="averageLapTime">--:--.--</div>
+        </div>
+
+        <div class="stat-card stat-worst">
+          <div class="stat-header">
+            <span class="stat-badge worst-badge">SLOWEST</span>
+            <span class="stat-lap" id="slowestLapNum">#0</span>
+          </div>
+          <div class="stat-value" id="slowestLapTime">--:--.--</div>
+        </div>
+      </section>
+
+      <!-- Laps Section -->
+      <section class="laps-section">
+        <div class="laps-header">
+          <div class="laps-title-wrap">
+            <h2 class="laps-title">Lap Times</h2>
+            <span class="lap-counter-pill" id="lapCounterPill">0 laps</span>
+          </div>
+          <div class="laps-actions" id="lapsActions">
+            <button id="copyLapsBtn" class="pill-btn" title="Copy laps to clipboard" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pill-icon">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+            <button id="exportCsvBtn" class="pill-btn" title="Export as CSV" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pill-icon">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>CSV</span>
+            </button>
+            <button id="clearLapsBtn" class="pill-btn text-danger" title="Clear lap history" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pill-icon">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Laps Table Header -->
+        <div class="laps-table-header">
+          <div class="col-lap">Lap</div>
+          <div class="col-split">Split Time</div>
+          <div class="col-total">Total Time</div>
+          <div class="col-delta">Diff</div>
+        </div>
+
+        <!-- Laps Scrollable List -->
+        <div class="laps-scroll-wrapper">
+          <ul id="laps" class="laps-list">
+            <li class="lap-empty-state" id="lapEmptyState">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <p>No lap records yet</p>
+              <span>Press <strong>Lap</strong> while stopwatch is running to record splits</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer with Keyboard Hints -->
+    <footer class="app-footer">
+      <div class="shortcuts-inline">
+        <span class="hint-item"><kbd>Space</kbd> Start / Pause</span>
+        <span class="hint-item"><kbd>L</kbd> Lap</span>
+        <span class="hint-item"><kbd>R</kbd> Reset</span>
+        <span class="hint-item"><kbd>M</kbd> Sound</span>
+        <span class="hint-item"><kbd>T</kbd> Theme</span>
+      </div>
+    </footer>
   </div>
+
+  <!-- Keyboard Shortcuts Modal Dialog -->
+  <dialog id="shortcutsModal" class="shortcuts-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Keyboard Shortcuts</h3>
+        <button id="closeModalBtn" class="close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Start or Pause stopwatch</span>
+          <kbd>Space</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Record a lap split</span>
+          <kbd>L</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Reset stopwatch to zero</span>
+          <kbd>R</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Toggle sound effects</span>
+          <kbd>M</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Toggle light / dark theme</span>
+          <kbd>T</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-desc">Open / close shortcuts dialog</span>
+          <kbd>?</kbd>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modalDismissBtn" class="btn-primary-small">Got it</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
   <script src="script.js"></script>
 </body>
